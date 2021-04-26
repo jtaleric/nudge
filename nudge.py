@@ -13,7 +13,9 @@ options = { 'server': server }
 conn = jira.JIRA(options, basic_auth=(username, password))
 
 issues=[]
-nudge=[]
+nudges=[]
+
+nudgeMessage=[]
 
 if len(queries) < 1:
     log.logger.error("No JIRA queries provided.")
@@ -28,10 +30,21 @@ for query in queries:
 if len(issues) > 0 :
     for issue in issues:
         for jira in issue['issues'] :
-            nudge.append({
-                "JIRA": "{}".format(jira['key']),
-                "OWNER": "{}".format(jira['fields']['assignee']['displayName'])
-                })
+            nudges.append({
+                "JIRA" : "{}".format(jira['key']),
+                "OWNER" : "{}".format(jira['fields']['assignee']['displayName']),
+                "LINK" : "{}/browse/{}".format(server,jira['key']),
+                "UPDATED" : "{}".format(jira['fields']['updated'])
+            })
 
-if len(nudge)> 0 :
-    pprint.pprint(nudge)
+log.logger.info("Number of nudges: {}".format(len(nudges)))
+
+if len(nudges) > 0 :
+    for nudge in nudges:
+        nudgeMessage.append("JIRA ({}) Has not been updated in over 3 days (laste updated){}, please {} provide an update - {}".
+                            format(nudge['JIRA'],
+                                   nudge['UPDATED'],
+                                   nudge['OWNER'],
+                                   nudge['LINK']))
+
+print("\n".join(nudgeMessage))
