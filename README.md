@@ -3,6 +3,9 @@
 ## Install
 `python setup.py install`
 
+## Quick start
+Install, update `env.sh`, source `env.sh`, run `python nudge.py`
+
 ## JIRA Setup
 ```
 export JIRA_Server="http://my-JIRA-Server"
