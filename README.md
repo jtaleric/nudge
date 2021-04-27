@@ -1,4 +1,7 @@
-# nudge - JIRA tool to help get nudge people
+# nudge - JIRA tool to help nudge people
+
+## Install
+`python setup.py install`
 
 ## JIRA Setup
 ```
