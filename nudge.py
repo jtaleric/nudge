@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import pprint
 import smtplib
 import logger as log
 import jira
@@ -28,9 +28,12 @@ password=os.environ['JIRA_Pass']
 queries=os.environ['JIRA_Queries'].split('  ')
 
 # EMAIL Nudges
-smtpServer=os.environ['EMAIL_Server']
-smtpFrom=os.environ['EMAIL_From']
-smtpTo=os.environ['EMAIL_To']
+sendEmail=False
+
+if sendEmail :
+    smtpServer=os.environ['EMAIL_Server']
+    smtpFrom=os.environ['EMAIL_From']
+    smtpTo=os.environ['EMAIL_To']
 
 options = { 'server': server }
 conn = jira.JIRA(options, basic_auth=(username, password))
@@ -39,7 +42,6 @@ issues=[]
 nudges=[]
 nudgeMessage=[]
 
-sendEmail=False
 
 if len(queries) < 1:
     log.logger.error("No JIRA queries provided.")
@@ -54,9 +56,13 @@ for query in queries:
 if len(issues) > 0 :
     for issue in issues:
         for jira in issue['issues'] :
+            if jira['fields']['assignee'] is None:
+                owner = "No Owner"
+            else :
+                owner = jira['fields']['assignee']['displayName']
             nudges.append({
                 "JIRA" : "{}".format(jira['key']),
-                "OWNER" : "{}".format(jira['fields']['assignee']['displayName']),
+                "OWNER" : "{}".format(owner),
                 "LINK" : "{}/browse/{}".format(server,jira['key']),
                 "UPDATED" : "{}".format(jira['fields']['updated'])
             })
@@ -79,3 +85,10 @@ if len(nudges) > 0 :
     	server.sendmail(smtpFrom, smtpTo, msg)
     	server.quit()
     	log.logger.info("Email Sent")
+    else :
+        for nudge in nudges:
+            print("{} Needs to be updated by {}. Last update was {}. Link {}".
+                  format(nudge['JIRA'],
+                         nudge['OWNER'],
+                         nudge['UPDATED'],
+                         nudge['LINK']))
