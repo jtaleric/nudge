@@ -19,6 +19,9 @@ import logger as log
 import jira
 import os
 
+# Team Name
+teamName="Team"
+
 # JIRA Connection Setup
 server=os.environ['JIRA_Server']
 username=os.environ['JIRA_User']
@@ -79,7 +82,7 @@ if len(nudges) > 0 :
 
     if sendEmail :
     	server = smtplib.SMTP(smtpServer)
-    	msg = "Subject: OCP PerfScale JIRA Nudge\n\n"
+    	msg = "Subject: {} JIRA Nudge\n\n".format(teamName)
     	msg += "Hello PerfScale Team,\nBelow are the current nudges, please address them today.\n\n"
     	msg += "{}".format("\n".join(nudgeMessage))
     	server.sendmail(smtpFrom, smtpTo, msg)
