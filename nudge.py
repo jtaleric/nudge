@@ -13,11 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import pprint
 import smtplib
 import logger as log
 import jira
 import os
+import argparse
+import operator
+
+parser= argparse.ArgumentParser(description="Tool to query and help nudge JIRA users")
+parser.add_argument(
+    "--report",
+    default=False,
+    type=bool,
+    dest="report")
+args = parser.parse_args()
 
 # Team Name
 teamName="Team"
@@ -45,7 +54,6 @@ issues=[]
 nudges=[]
 nudgeMessage=[]
 
-
 if len(queries) < 1:
     log.logger.error("No JIRA queries provided.")
     exit(1)
@@ -67,31 +75,58 @@ if len(issues) > 0 :
                 "JIRA" : "{}".format(jira['key']),
                 "OWNER" : "{}".format(owner),
                 "LINK" : "{}/browse/{}".format(server,jira['key']),
-                "UPDATED" : "{}".format(jira['fields']['updated'])
+                "UPDATED" : "{}".format(jira['fields']['updated']),
+                "DESC" : "{}".format(jira['fields']['description']),
+                "LABELS" : "{}".format(jira['fields']['labels']),
+                "SUMM" : "{}".format(jira['fields']['summary']),
+                "ID" : "{}".format(jira['id']),
+                "COMMENTS" : conn.comments(jira['key'])
             })
 
-log.logger.info("Number of nudges: {}".format(len(nudges)))
+nudges.sort(key=operator.itemgetter('OWNER'))
 
-if len(nudges) > 0 :
-    for nudge in nudges:
-        nudgeMessage.append("{}\nHas not been updated since {}. Please {} provide an update {}\n".
-                format(nudge['JIRA'],
-                    nudge['UPDATED'].split('T')[0],
-                    nudge['OWNER'],
-                    nudge['LINK']))
+if not args.report :
+    log.logger.info("Number of nudges: {}".format(len(nudges)))
 
-    if sendEmail :
-    	server = smtplib.SMTP(smtpServer)
-    	msg = "Subject: {} JIRA Nudge\n\n".format(teamName)
-    	msg += "Hello PerfScale Team,\nBelow are the current nudges, please address them today.\n\n"
-    	msg += "{}".format("\n".join(nudgeMessage))
-    	server.sendmail(smtpFrom, smtpTo, msg)
-    	server.quit()
-    	log.logger.info("Email Sent")
-    else :
+    if len(nudges) > 0 :
         for nudge in nudges:
-            print("{} Needs to be updated by {}. Last update was {}. Link {}".
-                  format(nudge['JIRA'],
-                         nudge['OWNER'],
-                         nudge['UPDATED'],
-                         nudge['LINK']))
+            nudgeMessage.append("{}\nHas not been updated since {}. Please {} provide an update {}\n".
+                    format(nudge['JIRA'],
+                        nudge['UPDATED'].split('T')[0],
+                        nudge['OWNER'],
+                        nudge['LINK']))
+
+        if sendEmail :
+    	    server = smtplib.SMTP(smtpServer)
+    	    msg = "Subject: {} JIRA Nudge\n\n".format(teamName)
+    	    msg += "Hello PerfScale Team,\nBelow are the current nudges, please address them today.\n\n"
+    	    msg += "{}".format("\n".join(nudgeMessage))
+    	    server.sendmail(smtpFrom, smtpTo, msg)
+    	    server.quit()
+    	    log.logger.info("Email Sent")
+        else :
+            for nudge in nudges:
+                print("{} Needs to be updated by {}. Last update was {}. Link {}".
+                    format(nudge['JIRA'],
+                            nudge['OWNER'],
+                            nudge['UPDATED'],
+                            nudge['LINK']))
+else:
+    nudges.sort(key=operator.itemgetter('OWNER'))
+    for nudge in nudges:
+        if len(nudge['COMMENTS']) > 0 :
+            latestCommentID = nudge['COMMENTS'].pop()
+            latestComment = conn.comment(nudge['ID'],latestCommentID).body
+        else:
+            latestComment = "No comments"
+
+        print("+------------------------------------------------------------------------------------------------------------+")
+        print("{} - {} \n{}\n{}\n{}\n{}\n\n".
+              format(nudge['JIRA'],
+                     nudge['SUMM'],
+                     nudge['LABELS'],
+                     nudge['OWNER'],
+                     nudge['LINK'],
+                     latestComment)
+             )
+        print("+------------------------------------------------------------------------------------------------------------+")
