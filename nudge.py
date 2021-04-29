@@ -15,6 +15,7 @@ limitations under the License.
 """
 import smtplib
 import logger as log
+from textwrap3 import wrap
 import jira
 import os
 import argparse
@@ -120,13 +121,13 @@ else:
         else:
             latestComment = "No comments"
 
-        print("+------------------------------------------------------------------------------------------------------------+")
+        print("+{}+".format("="*100))
         print("{} - {} \n{}\n{}\n{}\n{}\n\n".
               format(nudge['JIRA'],
                      nudge['SUMM'],
                      nudge['LABELS'],
                      nudge['OWNER'],
                      nudge['LINK'],
-                     latestComment)
-             )
-        print("+------------------------------------------------------------------------------------------------------------+")
+                     "\n".join(wrap(latestComment,100))
+             ))
+        print("+{}+".format("="*100))
