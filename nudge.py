@@ -63,7 +63,7 @@ for query in queries:
     if query == "":
         continue
     log.logger.info("Running query: %s" % (query))
-    issues.append(conn.search_issues(jql_str=query,json_result=True))
+    issues.append(conn.search_issues(jql_str=query,json_result=True,maxResults=200))
 
 if len(issues) > 0 :
     for issue in issues:
@@ -75,6 +75,8 @@ if len(issues) > 0 :
             nudges.append({
                 "JIRA" : "{}".format(jira['key']),
                 "OWNER" : "{}".format(owner),
+                "CREATOR" : "{}".format(jira['fields']['creator']['displayName']),
+                "STATUS" : "{}".format(jira['fields']['status']['name']),
                 "LINK" : "{}/browse/{}".format(server,jira['key']),
                 "UPDATED" : "{}".format(jira['fields']['updated']),
                 "DESC" : "{}".format(jira['fields']['description']),
@@ -122,11 +124,13 @@ else:
             latestComment = "No comments"
 
         print("+{}+".format("="*100))
-        print("{} - {} \n{}\n{}\n{}\n{}\n\n".
+        print("{} - {} \nLabels: {}\nOwner: {}\nCreator: {}\nStatus: {}\nLink: {}\nLast Comment:\n{}\n\n".
               format(nudge['JIRA'],
                      nudge['SUMM'],
                      nudge['LABELS'],
                      nudge['OWNER'],
+                     nudge['CREATOR'],
+                     nudge['STATUS'],
                      nudge['LINK'],
                      "\n".join(wrap(latestComment,100))
              ))
