@@ -83,7 +83,8 @@ if len(issues) > 0 :
                 "LABELS" : "{}".format(jira['fields']['labels']),
                 "SUMM" : "{}".format(jira['fields']['summary']),
                 "ID" : "{}".format(jira['id']),
-                "COMMENTS" : conn.comments(jira['key'])
+                "COMMENTS" : conn.comments(jira['key']),
+                "TASKS" : jira['fields']['subtasks']
             })
 
 nudges.sort(key=operator.itemgetter('OWNER'))
@@ -122,8 +123,14 @@ else:
             latestComment = conn.comment(nudge['ID'],latestCommentID).body
         else:
             latestComment = "No comments"
+        if nudge['STATUS'] == "To Do":
+            continue
+
+        epic = conn.search_issues("project = PerfScale AND id={} AND \"Epic Link\" is not EMPTY".format(nudge['ID']))
 
         print("+{}+".format("="*100))
+        if len(epic) == 0 :
+            print(" -- NOTE:: {} has no EPIC assigned, please link to an EPIC -- ".format(nudge['JIRA']))
         print("{} - {} \nLabels: {}\nOwner: {}\nCreator: {}\nStatus: {}\nLink: {}\nLast Comment:\n{}\n\n".
               format(nudge['JIRA'],
                      nudge['SUMM'],
@@ -134,4 +141,8 @@ else:
                      nudge['LINK'],
                      "\n".join(wrap(latestComment,100))
              ))
+        if len(nudge['TASKS']) > 0 :
+            print("Sub-Tasks for {}".format(nudge['JIRA']))
+            for tasks in nudge['TASKS'] :
+                print("JIRA : {}\nStatus : {}\nSummary :{}\n".format(tasks['key'],tasks['fields']['status']['name'],tasks['fields']['summary']))
         print("+{}+".format("="*100))
