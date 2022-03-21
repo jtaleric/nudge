@@ -1,5 +1,6 @@
 
 # Setup JIRA Details
+export JIRA_Token=""
 export JIRA_User=""
 export JIRA_Server=""
 export JIRA_Queries=""
