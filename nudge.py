@@ -38,7 +38,7 @@ username=os.environ['JIRA_User']
 password=os.environ['JIRA_Pass']
 token=os.environ['JIRA_Token']
 
-# Queries, Tab delimited
+# Queries, double-space delimited
 queries=os.environ['JIRA_Queries'].split('  ')
 
 # EMAIL Nudges
