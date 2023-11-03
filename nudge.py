@@ -25,7 +25,7 @@ parser= argparse.ArgumentParser(description="Tool to query and help nudge JIRA u
 parser.add_argument(
     "--report",
     default=False,
-    type=bool,
+    action='store_true',
     dest="report")
 args = parser.parse_args()
 
@@ -36,8 +36,9 @@ teamName="Team"
 server=os.environ['JIRA_Server']
 username=os.environ['JIRA_User']
 password=os.environ['JIRA_Pass']
+token=os.environ['JIRA_Token']
 
-# Queries, Tab delimited
+# Queries, double-space delimited
 queries=os.environ['JIRA_Queries'].split('  ')
 
 # EMAIL Nudges
@@ -49,7 +50,10 @@ if sendEmail :
     smtpTo=os.environ['EMAIL_To']
 
 options = { 'server': server }
-conn = jira.JIRA(options, basic_auth=(username, password))
+if token :
+    conn = jira.JIRA(options, token_auth=(token))
+else :
+    conn = jira.JIRA(options, basic_auth=(username, password))
 
 issues=[]
 nudges=[]
